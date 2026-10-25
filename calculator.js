@@ -1,183 +1,136 @@
 // =====================================
-// querySelector + addEventListener 계산기
+// 콘솔창 계산기 프로그램
+// - 사칙연산 (+, -, *, /)
+// - 길이가 긴 계산식 계산
+// - 연산자 우선순위 (*, / 를 +, - 보다 먼저 계산)
+// - eval() 없이 직접 계산
 // =====================================
 
-// ---------- 요소 선택 (querySelector) ----------
-const resultEl = document.querySelector("#result");
-const expressionEl = document.querySelector("#expression");
-const buttonsEl = document.querySelector(".buttons");
-const operatorBtns = document.querySelectorAll(".operator");
+// 1. 계산식 문자열을 숫자와 연산자로 나누기
+//    "1 + 2 * -3" → [1, "+", 2, "*", -3]
+function tokenize(expression) {
+  const tokens = [];
+  const str = expression.replace(/\s+/g, ""); // 공백 제거
+  let i = 0;
 
-// ---------- 상태 ----------
-let current = "0"; // 지금 입력 중인 숫자
-let previous = null; // 앞에 입력한 숫자
-let operator = null; // 선택한 연산자
-let waitingForNext = false; // 연산자를 누른 직후인지
+  while (i < str.length) {
+    const char = str[i];
 
-const SYMBOLS = { "+": "+", "-": "−", "*": "×", "/": "÷" };
+    // 숫자 (앞에 붙은 - 부호 포함)
+    // - 가 맨 앞이거나 연산자 바로 뒤에 오면 음수 부호로 봄
+    const isSign =
+      char === "-" &&
+      (tokens.length === 0 || typeof tokens[tokens.length - 1] === "string");
 
-// ---------- 화면 갱신 ----------
-const updateDisplay = () => {
-  resultEl.textContent = current;
-  expressionEl.textContent =
-    previous !== null && operator ? `${previous} ${SYMBOLS[operator]}` : "";
+    if (/[0-9.]/.test(char) || isSign) {
+      let numStr = char;
+      i++;
+      while (i < str.length && /[0-9.]/.test(str[i])) {
+        numStr += str[i];
+        i++;
+      }
 
-  // 선택된 연산자 버튼 강조
-  operatorBtns.forEach((btn) => {
-    btn.classList.toggle(
-      "active",
-      waitingForNext && btn.dataset.operator === operator
-    );
-  });
-};
+      const num = Number(numStr);
+      if (Number.isNaN(num) || numStr === "-") {
+        throw new Error(`잘못된 숫자입니다: "${numStr}"`);
+      }
+      tokens.push(num);
+      continue;
+    }
 
-// ---------- 계산 ----------
-const calculate = (a, b, op) => {
-  const x = Number(a);
-  const y = Number(b);
-  let value;
+    // 연산자
+    if ("+-*/".includes(char)) {
+      if (tokens.length === 0 || typeof tokens[tokens.length - 1] === "string") {
+        throw new Error(`연산자 "${char}"의 위치가 잘못되었습니다.`);
+      }
+      tokens.push(char);
+      i++;
+      continue;
+    }
 
-  switch (op) {
-    case "+": value = x + y; break;
-    case "-": value = x - y; break;
-    case "*": value = x * y; break;
-    case "/":
-      if (y === 0) return "오류";
-      value = x / y;
+    throw new Error(`사용할 수 없는 문자입니다: "${char}"`);
+  }
+
+  if (tokens.length === 0) {
+    throw new Error("계산식이 비어 있습니다.");
+  }
+  if (typeof tokens[tokens.length - 1] === "string") {
+    throw new Error("계산식이 연산자로 끝날 수 없습니다.");
+  }
+
+  return tokens;
+}
+
+// 2. 곱셈, 나눗셈 먼저 계산
+//    [1, "+", 2, "*", 3] → [1, "+", 6]
+function calcMulDiv(tokens) {
+  const result = [tokens[0]];
+
+  for (let i = 1; i < tokens.length; i += 2) {
+    const operator = tokens[i];
+    const num = tokens[i + 1];
+
+    if (operator === "*") {
+      result[result.length - 1] *= num;
+    } else if (operator === "/") {
+      if (num === 0) throw new Error("0으로 나눌 수 없습니다.");
+      result[result.length - 1] /= num;
+    } else {
+      result.push(operator, num); // +, - 는 다음 단계로 넘김
+    }
+  }
+
+  return result;
+}
+
+// 3. 덧셈, 뺄셈을 왼쪽부터 계산
+//    [1, "+", 6] → 7
+function calcAddSub(tokens) {
+  let total = tokens[0];
+
+  for (let i = 1; i < tokens.length; i += 2) {
+    const operator = tokens[i];
+    const num = tokens[i + 1];
+
+    if (operator === "+") total += num;
+    else if (operator === "-") total -= num;
+  }
+
+  return total;
+}
+
+// 4. 전체 계산
+function calculate(expression) {
+  const tokens = tokenize(expression);
+  const afterMulDiv = calcMulDiv(tokens);
+  const result = calcAddSub(afterMulDiv);
+
+  // 0.1 + 0.2 = 0.30000000000000004 같은 부동소수점 오차 정리
+  return parseFloat(result.toPrecision(12));
+}
+
+// 5. 콘솔에서 실행하는 함수
+function start() {
+  console.log("🧮 계산기를 시작합니다. (취소를 누르면 종료)");
+
+  while (true) {
+    const input = prompt("계산식을 입력하세요.(예: 1 + 1 * 4)");
+
+    // 취소 버튼 또는 빈 입력 → 종료
+    if (input === null || input.trim() === "") {
+      console.log("👋 계산기를 종료합니다.");
       break;
-    default:
-      return b;
+    }
+
+    try {
+      const result = calculate(input);
+      console.log(`${input} = ${result}`);
+      alert(`${input} = ${result}`);
+    } catch (error) {
+      console.error(`❌ ${error.message}`);
+      alert(`오류: ${error.message}`);
+    }
   }
+}
 
-  // 0.1 + 0.2 같은 부동소수점 오차 정리
-  return String(parseFloat(value.toPrecision(12)));
-};
-
-// ---------- 입력 처리 ----------
-const inputNumber = (num) => {
-  if (current === "오류" || waitingForNext) {
-    current = num;
-    waitingForNext = false;
-  } else {
-    current = current === "0" ? num : current + num;
-  }
-};
-
-const inputDecimal = () => {
-  if (current === "오류" || waitingForNext) {
-    current = "0.";
-    waitingForNext = false;
-    return;
-  }
-  if (!current.includes(".")) current += ".";
-};
-
-const inputOperator = (nextOp) => {
-  if (current === "오류") return;
-
-  // 연산자를 연속으로 누르면 연산자만 교체
-  if (operator && waitingForNext) {
-    operator = nextOp;
-    return;
-  }
-
-  // 3 + 4 × 처럼 이어서 계산
-  if (previous !== null && operator) {
-    current = calculate(previous, current, operator);
-  }
-
-  previous = current;
-  operator = nextOp;
-  waitingForNext = true;
-};
-
-const equal = () => {
-  if (previous === null || !operator || waitingForNext) return;
-  expressionEl.textContent = `${previous} ${SYMBOLS[operator]} ${current} =`;
-  current = calculate(previous, current, operator);
-  previous = null;
-  operator = null;
-  waitingForNext = true;
-};
-
-const clear = () => {
-  current = "0";
-  previous = null;
-  operator = null;
-  waitingForNext = false;
-};
-
-const toggleSign = () => {
-  if (current === "0" || current === "오류") return;
-  current = current.startsWith("-") ? current.slice(1) : "-" + current;
-};
-
-const percent = () => {
-  if (current === "오류") return;
-  current = String(parseFloat((Number(current) / 100).toPrecision(12)));
-};
-
-const backspace = () => {
-  if (waitingForNext || current === "오류") return;
-  current = current.length > 1 ? current.slice(0, -1) : "0";
-  if (current === "-") current = "0";
-};
-
-// ---------- 버튼 클릭 (addEventListener + 이벤트 위임) ----------
-buttonsEl.addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-
-  const { number, operator: op, action } = btn.dataset;
-
-  if (number !== undefined) inputNumber(number);
-  else if (op) inputOperator(op);
-  else if (action === "decimal") inputDecimal();
-  else if (action === "equal") {
-    equal();
-    resultEl.textContent = current;
-    operatorBtns.forEach((b) => b.classList.remove("active"));
-    return; // 결과식(3 + 4 =)을 유지하기 위해 여기서 종료
-  }
-  else if (action === "clear") clear();
-  else if (action === "sign") toggleSign();
-  else if (action === "percent") percent();
-
-  updateDisplay();
-});
-
-// ---------- 키보드 입력 (추가 기능) ----------
-const KEY_MAP = {
-  Enter: '[data-action="equal"]',
-  "=": '[data-action="equal"]',
-  Escape: '[data-action="clear"]',
-  ".": '[data-action="decimal"]',
-  "%": '[data-action="percent"]',
-  "+": '[data-operator="+"]',
-  "-": '[data-operator="-"]',
-  "*": '[data-operator="*"]',
-  "/": '[data-operator="/"]',
-};
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Backspace") {
-    backspace();
-    updateDisplay();
-    return;
-  }
-
-  const selector = /^[0-9]$/.test(e.key)
-    ? `[data-number="${e.key}"]`
-    : KEY_MAP[e.key];
-  if (!selector) return;
-
-  e.preventDefault();
-  const btn = document.querySelector(selector);
-  btn.click(); // 버튼 클릭과 똑같이 처리
-
-  // 눌린 버튼 효과
-  btn.classList.add("pressed");
-  setTimeout(() => btn.classList.remove("pressed"), 100);
-});
-
-updateDisplay();
+console.log("콘솔에 start() 를 입력하면 계산기가 실행됩니다.");

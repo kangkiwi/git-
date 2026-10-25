@@ -3,47 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>실시간 암호화폐 가격 변동 추적기</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>콘솔창 계산기 프로그램</title>
+  <style>
+    body {
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      padding: 0 8px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>실시간 암호화폐 가격 변동 추적기</h1>
+  <h1>콘솔창 계산기 프로그램</h1>
 
-    <!-- 탭 -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="all">전체보기</button>
-      <button class="tab-btn" data-tab="favorites">관심항목</button>
-    </div>
+  <h3>Window OS의 경우</h3>
+  <hr />
+  <p>1. F12 키를 눌러 콘솔 창을 여세요.</p>
+  <p>2. start()를 콘솔창에 입력하여 계산기를 실행합니다.</p>
 
-    <!-- 검색 -->
-    <input
-      type="text"
-      id="search"
-      placeholder="심볼 검색 (예: BTCUSDT)"
-      autocomplete="off"
-    />
+  <h3>Mac OS의 경우</h3>
+  <hr />
+  <p>1. Option + Command + i 키를 눌러 콘솔 창을 여세요.</p>
+  <p>2. start()를 콘솔창에 입력하여 계산기를 실행합니다.</p>
 
-    <p class="status" id="status">데이터를 불러오는 중...</p>
-
-    <!-- 목록 -->
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>관심</th>
-            <th>심볼</th>
-            <th>현재가</th>
-            <th>24시간 변동률</th>
-            <th>최고가</th>
-            <th>최저가</th>
-          </tr>
-        </thead>
-        <tbody id="coin-list"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
+  <script src="calculator.js"></script>
 </body>
 </html>
