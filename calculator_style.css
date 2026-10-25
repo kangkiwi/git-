@@ -1,0 +1,105 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f2f5;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+.calculator {
+  width: 320px;
+  background: #2c3e50;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 화면 */
+.display {
+  background: #1f2d3a;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: right;
+  color: #fff;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.expression {
+  font-size: 16px;
+  color: #95a5a6;
+  min-height: 20px;
+  word-break: break-all;
+}
+
+.result {
+  font-size: 40px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* 버튼 */
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.btn {
+  height: 60px;
+  border: none;
+  border-radius: 10px;
+  font-size: 22px;
+  cursor: pointer;
+  transition: filter 0.1s, transform 0.05s;
+}
+
+.btn:hover {
+  filter: brightness(1.15);
+}
+
+.btn:active,
+.btn.pressed {
+  transform: scale(0.95);
+}
+
+.number {
+  background: #3d5266;
+  color: #fff;
+}
+
+.function {
+  background: #95a5a6;
+  color: #2c3e50;
+}
+
+.operator {
+  background: #f39c12;
+  color: #fff;
+}
+
+/* 선택된 연산자 표시 */
+.operator.active {
+  background: #fff;
+  color: #f39c12;
+}
+
+.equal {
+  background: #27ae60;
+  color: #fff;
+}
+
+.zero {
+  grid-column: span 2;
+}
